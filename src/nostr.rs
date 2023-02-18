@@ -122,7 +122,7 @@ pub async fn send_nostr_events(events: Vec<Event>) -> Result<Vec<EventId>, Error
         futures.push(fut);
     }
     let combined_futures = futures::future::join_all(futures);
-    let sleep = delay(60_000);
+    let sleep = delay(120_000);
     pin_mut!(combined_futures);
     pin_mut!(sleep);
 

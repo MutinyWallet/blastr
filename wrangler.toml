@@ -18,7 +18,7 @@ WORKERS_RS_VERSION = "0.0.11"
 [[queues.consumers]]
  queue = "nostr-events-pub"
  max_batch_size = 10 # max events until triggered
- max_batch_timeout = 30 # max seconds until triggered
+ max_batch_timeout = 60 # max seconds until triggered
 
 [build]
 command = "cargo install --git https://github.com/CathalMullan/workers-rs worker-build && worker-build --release"
