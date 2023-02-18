@@ -1,0 +1,23 @@
+name = "blastr"
+main = "build/worker/shim.mjs"
+compatibility_date = "2022-01-20"
+
+[vars]
+WORKERS_RS_VERSION = "0.0.11"
+
+routes = [
+    { pattern = "nostr.mutinywallet.com", zone_id = "mutiny-waitlist.workers.dev" } # replace with your info
+]
+
+[[queues.producers]]
+ queue = "nostr-events-pub"
+ binding = "nostr-events-pub"
+
+[[queues.consumers]]
+ queue = "nostr-events-pub"
+ max_batch_size = 10 # max events until triggered
+ max_batch_timeout = 30 # max seconds until triggered
+
+[build]
+command = "cargo install --git https://github.com/CathalMullan/workers-rs worker-build && worker-build --release"
+#command = "cargo install -q worker-build --version 0.0.7 && worker-build --release"
