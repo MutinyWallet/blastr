@@ -2,12 +2,12 @@ name = "blastr"
 main = "build/worker/shim.mjs"
 compatibility_date = "2022-01-20"
 
+routes = [
+    { pattern = "nostr.mutinywallet.com", zone_id = "2b9268714ce8d1c4431e8046d4ba55d3" } # replace with your info
+]
+
 [vars]
 WORKERS_RS_VERSION = "0.0.11"
-
-routes = [
-    { pattern = "nostr.mutinywallet.com", zone_id = "mutiny-waitlist.workers.dev" } # replace with your info
-]
 
 [[queues.producers]]
  queue = "nostr-events-pub"
