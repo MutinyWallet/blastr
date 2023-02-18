@@ -1,6 +1,14 @@
 # blastr
 
-A nostr cloudflare workers proxy relay that publishes to all known relays
+A nostr cloudflare workers proxy relay that publishes to all known online relays.
+
+![blastr diagram](./docs/images/blastr-diagram.png)
+
+This takes advantage of the high availabilty of cloudflare serverless workers on the edge that are rust wasm-based with 0ms cold starts. Learn more about [cloudflare workers](https://workers.cloudflare.com/).
+
+This is write only for now and is compatible with nostr clients but also features a simple POST api endpoint at `/event`. All events get queued up to run in batches by another worker that spins up every 30s if there's any events lined up, or once a certain amount of events are queued up.
+
+This will help ensure that your events are broadcasted to as many places as possible.
 
 ## Development
 
