@@ -1,4 +1,4 @@
-use crate::nostr::{try_queue_client_msg, NOSTR_QUEUE};
+pub(crate) use crate::nostr::{try_queue_client_msg, NOSTR_QUEUE};
 use ::nostr::{ClientMessage, Event};
 use futures::StreamExt;
 use worker::*;
@@ -34,10 +34,16 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
     router
         .post_async("/event", |mut req, ctx| async move {
             // for any adhoc POST event
-            let request_text = req.text().await?;
-            if let Ok(client_msg) = ClientMessage::from_json(request_text) {
-                let nostr_queue = ctx.env.queue(NOSTR_QUEUE).expect("get queue");
-                try_queue_client_msg(client_msg, nostr_queue).await
+            match req.text().await {
+                Ok(request_text) => {
+                    if let Ok(client_msg) = ClientMessage::from_json(request_text) {
+                        let nostr_queue = ctx.env.queue(NOSTR_QUEUE).expect("get queue");
+                        try_queue_client_msg(client_msg, nostr_queue).await
+                    }
+                }
+                Err(e) => {
+                    console_log!("could not get request text: {}", e);
+                }
             }
 
             fetch()
