@@ -22,22 +22,13 @@ const RELAYS: [&str; 8] = [
     "wss://nostr.wine",
 ];
 
-pub async fn try_queue_client_msg(client_msg: ClientMessage, nostr_queues: Vec<Queue>) {
-    match client_msg {
-        ClientMessage::Event(event) => {
-            console_log!("got an event from client: {}", event.id);
-            for nostr_queue in nostr_queues.iter() {
-                match queue_nostr_event_with_queue(nostr_queue, *event.clone()).await {
-                    Ok(_) => {}
-                    Err(Error::WorkerError(e)) => {
-                        console_log!("worker error: {e}");
-                    }
-                }
+pub async fn try_queue_event(event: Event, nostr_queues: Vec<Queue>) {
+    for nostr_queue in nostr_queues.iter() {
+        match queue_nostr_event_with_queue(nostr_queue, event.clone()).await {
+            Ok(_) => {}
+            Err(Error::WorkerError(e)) => {
+                console_log!("worker error: {e}");
             }
-            console_log!("queued up nostr event: {}", event.id)
-        }
-        _ => {
-            console_log!("ignoring other nostr client message types");
         }
     }
 }
