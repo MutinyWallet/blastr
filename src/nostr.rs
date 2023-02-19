@@ -1,10 +1,15 @@
 use crate::error::Error;
 use futures::pin_mut;
 use nostr::prelude::*;
-use std::time::Duration;
+use std::{time::Duration, vec};
 use worker::{console_log, Cache, Delay, Fetch, Queue, Response, WebSocket};
 
 pub(crate) const NOSTR_QUEUE: &str = "nostr-events-pub";
+pub(crate) const NOSTR_QUEUE_2: &str = "nostr-events-pub-2";
+pub(crate) const NOSTR_QUEUE_3: &str = "nostr-events-pub-3";
+pub(crate) const NOSTR_QUEUE_4: &str = "nostr-events-pub-4";
+pub(crate) const NOSTR_QUEUE_5: &str = "nostr-events-pub-5";
+pub(crate) const NOSTR_QUEUE_6: &str = "nostr-events-pub-6";
 const RELAY_LIST_URL: &str = "https://api.nostr.watch/v1/online";
 const RELAYS: [&str; 8] = [
     "wss://nostr.zebedee.cloud",
@@ -17,18 +22,19 @@ const RELAYS: [&str; 8] = [
     "wss://nostr.wine",
 ];
 
-pub async fn try_queue_client_msg(client_msg: ClientMessage, nostr_queue: Queue) {
+pub async fn try_queue_client_msg(client_msg: ClientMessage, nostr_queues: Vec<Queue>) {
     match client_msg {
         ClientMessage::Event(event) => {
             console_log!("got an event from client: {}", event.id);
-            match queue_nostr_event_with_queue(nostr_queue, *event.clone()).await {
-                Ok(_) => {
-                    console_log!("queued up nostr event: {}", event.id)
-                }
-                Err(Error::WorkerError(e)) => {
-                    console_log!("worker error: {e}");
+            for nostr_queue in nostr_queues.iter() {
+                match queue_nostr_event_with_queue(nostr_queue, *event.clone()).await {
+                    Ok(_) => {}
+                    Err(Error::WorkerError(e)) => {
+                        console_log!("worker error: {e}");
+                    }
                 }
             }
+            console_log!("queued up nostr event: {}", event.id)
         }
         _ => {
             console_log!("ignoring other nostr client message types");
@@ -36,36 +42,45 @@ pub async fn try_queue_client_msg(client_msg: ClientMessage, nostr_queue: Queue)
     }
 }
 
-pub async fn queue_nostr_event_with_queue(nostr_queue: Queue, event: Event) -> Result<(), Error> {
+pub async fn queue_nostr_event_with_queue(nostr_queue: &Queue, event: Event) -> Result<(), Error> {
     nostr_queue.send(&event).await?;
     Ok(())
 }
 
 async fn send_event_to_relay(messages: Vec<ClientMessage>, relay: &str) -> Result<(), Error> {
-    console_log!("connecting to relay: {relay}");
-    let ws = WebSocket::connect(relay.parse().unwrap()).await?;
+    match WebSocket::connect(relay.parse().unwrap()).await {
+        Ok(ws) => {
+            // It's important that we call this before we send our first message, otherwise we will
+            // not have any event listeners on the socket to receive the echoed message.
+            if let Some(e) = ws.events().err() {
+                console_log!("Error calling ws events from relay {relay}: {e:?}");
+                return Err(e.into());
+            }
 
-    // It's important that we call this before we send our first message, otherwise we will
-    // not have any event listeners on the socket to receive the echoed message.
-    let _event_stream = ws.events()?;
+            if let Some(e) = ws.accept().err() {
+                console_log!("Error accepting ws from relay {relay}: {e:?}");
+                return Err(e.into());
+            }
 
-    ws.accept()?;
-    console_log!("sending event to relay: {relay}");
+            for message in messages {
+                if let Some(e) = ws.send_with_str(message.as_json()).err() {
+                    console_log!("Error sending event to relay {relay}: {e:?}")
+                }
+            }
 
-    for message in messages {
-        if let Some(e) = ws.send_with_str(message.as_json()).err() {
-            console_log!("Error sending event to relay {relay}: {e:?}")
+            if let Some(_e) = ws.close::<String>(None, None).err() {
+                console_log!("Error websocket to relay {relay}")
+            }
         }
-    }
-
-    if let Some(_e) = ws.close::<String>(None, None).err() {
-        console_log!("Error websocket to relay {relay}")
-    }
+        Err(e) => {
+            console_log!("Error connecting to relay {relay}: {e:?}")
+        }
+    };
 
     Ok(())
 }
 
-pub async fn send_nostr_events(events: Vec<Event>) -> Result<Vec<EventId>, Error> {
+pub async fn send_nostr_events(events: Vec<Event>, part: u32) -> Result<Vec<EventId>, Error> {
     let messages: Vec<ClientMessage> = events
         .iter()
         .map(|e| ClientMessage::new_event(e.clone()))
@@ -93,7 +108,7 @@ pub async fn send_nostr_events(events: Vec<Event>) -> Result<Vec<EventId>, Error
 
                         // Cache API respects Cache-Control headers. Setting s-max-age to 10
                         // will limit the response to be in cache for 10 seconds max
-                        resp.headers_mut().set("cache-control", "s-maxage=600")?;
+                        resp.headers_mut().set("cache-control", "s-maxage=1800")?;
                         cache.put(RELAY_LIST_URL, resp.cloned()?).await?;
                         match resp.json::<Vec<String>>().await {
                             Ok(r) => r,
@@ -115,9 +130,10 @@ pub async fn send_nostr_events(events: Vec<Event>) -> Result<Vec<EventId>, Error
             }
         }
     };
-
+    // find range of elements for this part
+    let sub_relays = get_sub_vec_range(relays, find_range_from_part(part));
     let mut futures = Vec::new();
-    for relay in relays.iter() {
+    for relay in sub_relays.iter() {
         let fut = send_event_to_relay(messages.clone(), relay);
         futures.push(fut);
     }
@@ -125,11 +141,23 @@ pub async fn send_nostr_events(events: Vec<Event>) -> Result<Vec<EventId>, Error
     let sleep = delay(120_000);
     pin_mut!(combined_futures);
     pin_mut!(sleep);
-
-    console_log!("waiting for futures");
     futures::future::select(combined_futures, sleep).await;
-    console_log!("futures done");
     Ok(events.iter().map(|e| e.id).collect())
+}
+
+fn get_sub_vec_range(original: Vec<String>, range: (usize, usize)) -> Vec<String> {
+    let len = original.len();
+    if range.0 >= len {
+        return vec![];
+    }
+    let end = if range.1 >= len { len - 1 } else { range.1 };
+    original[range.0..end].to_vec()
+}
+
+fn find_range_from_part(part: u32) -> (usize, usize) {
+    let start = 48 * part;
+    let end = start + 47;
+    (start as usize, end as usize)
 }
 
 async fn delay(delay: u64) {
