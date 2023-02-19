@@ -1,4 +1,7 @@
-pub(crate) use crate::nostr::{try_queue_client_msg, NOSTR_QUEUE};
+pub(crate) use crate::nostr::{
+    try_queue_client_msg, NOSTR_QUEUE, NOSTR_QUEUE_2, NOSTR_QUEUE_3, NOSTR_QUEUE_4, NOSTR_QUEUE_5,
+    NOSTR_QUEUE_6,
+};
 use ::nostr::{ClientMessage, Event};
 use futures::StreamExt;
 use worker::*;
@@ -37,8 +40,15 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             match req.text().await {
                 Ok(request_text) => {
                     if let Ok(client_msg) = ClientMessage::from_json(request_text) {
-                        let nostr_queue = ctx.env.queue(NOSTR_QUEUE).expect("get queue");
-                        try_queue_client_msg(client_msg, nostr_queue).await
+                        let nostr_queues = vec![
+                            ctx.env.queue(NOSTR_QUEUE).expect("get queue"),
+                            ctx.env.queue(NOSTR_QUEUE_2).expect("get queue"),
+                            ctx.env.queue(NOSTR_QUEUE_3).expect("get queue"),
+                            ctx.env.queue(NOSTR_QUEUE_4).expect("get queue"),
+                            ctx.env.queue(NOSTR_QUEUE_5).expect("get queue"),
+                            ctx.env.queue(NOSTR_QUEUE_6).expect("get queue"),
+                        ];
+                        try_queue_client_msg(client_msg, nostr_queues).await
                     }
                 }
                 Err(e) => {
@@ -64,8 +74,15 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                 continue;
                             };
                             if let Ok(client_msg) = ClientMessage::from_json(msg.text().unwrap()) {
-                                let nostr_queue = ctx.env.queue(NOSTR_QUEUE).expect("get queue");
-                                try_queue_client_msg(client_msg, nostr_queue).await
+                                let nostr_queues = vec![
+                                    ctx.env.queue(NOSTR_QUEUE).expect("get queue"),
+                                    ctx.env.queue(NOSTR_QUEUE_2).expect("get queue"),
+                                    ctx.env.queue(NOSTR_QUEUE_3).expect("get queue"),
+                                    ctx.env.queue(NOSTR_QUEUE_4).expect("get queue"),
+                                    ctx.env.queue(NOSTR_QUEUE_5).expect("get queue"),
+                                    ctx.env.queue(NOSTR_QUEUE_6).expect("get queue"),
+                                ];
+                                try_queue_client_msg(client_msg, nostr_queues).await
                             }
                         }
                         WebsocketEvent::Close(_) => {
@@ -86,9 +103,12 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
 pub async fn main(message_batch: MessageBatch<Event>, _env: Env, _ctx: Context) -> Result<()> {
     // Deserialize the message batch
     let messages: Vec<Message<Event>> = message_batch.messages()?;
-    let events: Vec<Event> = messages.iter().map(|m| m.body.clone()).collect();
+    let mut events: Vec<Event> = messages.iter().map(|m| m.body.clone()).collect();
+    events.sort();
+    events.dedup();
 
-    match nostr::send_nostr_events(events).await {
+    let part = queue_number(message_batch.queue().as_str())?;
+    match nostr::send_nostr_events(events, part).await {
         Ok(event_ids) => {
             for event_id in event_ids {
                 console_log!("Sent nostr event: {}", event_id)
@@ -100,6 +120,18 @@ pub async fn main(message_batch: MessageBatch<Event>, _env: Env, _ctx: Context) 
     }
 
     Ok(())
+}
+
+pub fn queue_number(batch_name: &str) -> Result<u32> {
+    match batch_name {
+        NOSTR_QUEUE => Ok(0),
+        NOSTR_QUEUE_2 => Ok(1),
+        NOSTR_QUEUE_3 => Ok(2),
+        NOSTR_QUEUE_4 => Ok(3),
+        NOSTR_QUEUE_5 => Ok(4),
+        NOSTR_QUEUE_6 => Ok(5),
+        _ => Err("unexpected queue".into()),
+    }
 }
 
 fn fetch() -> worker::Result<Response> {
