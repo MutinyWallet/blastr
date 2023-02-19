@@ -48,6 +48,10 @@ pub async fn queue_nostr_event_with_queue(nostr_queue: &Queue, event: Event) -> 
 }
 
 async fn send_event_to_relay(messages: Vec<ClientMessage>, relay: &str) -> Result<(), Error> {
+    // skip self
+    if relay == "wss://nostr.mutinywallet.com" {
+        return Ok(());
+    }
     match WebSocket::connect(relay.parse().unwrap()).await {
         Ok(ws) => {
             // It's important that we call this before we send our first message, otherwise we will
