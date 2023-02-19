@@ -15,6 +15,7 @@ cfg-if = "0.1.2"
 worker = { git = "https://github.com/cloudflare/workers-rs", rev = "b4b9cd1f15feac412b6f9e9e9209458cd3b98430", features = ["queue"] }
 futures = "0.3.26"
 nostr = { git = "https://github.com/rust-nostr/nostr", rev = "c333544b1e58b89acb786695d5ca08759ebf5e69" }
+serde = { version = "^1.0", features = ["derive"] }
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires

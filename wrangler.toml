@@ -8,6 +8,10 @@ routes = [
     { pattern = "nostr.mutinywallet.com/event", zone_id = "2b9268714ce8d1c4431e8046d4ba55d3" }
 ]
 
+kv_namespaces = [
+  { binding = "PUBLISHED_NOTES", id = "afa24a392a5a41f6b1655507dfd9b97a", preview_id = "0b334aece8d74c3ab90e3e99db569ce8" }
+]
+
 [vars]
 WORKERS_RS_VERSION = "0.0.11"
 
