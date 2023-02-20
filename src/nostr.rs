@@ -1,7 +1,9 @@
 use crate::error::Error;
 use futures::pin_mut;
+use futures::StreamExt;
 use nostr::prelude::*;
 use std::{time::Duration, vec};
+use worker::WebsocketEvent;
 use worker::{console_log, Cache, Delay, Fetch, Queue, Response, WebSocket};
 
 pub(crate) const NOSTR_QUEUE: &str = "nostr-events-pub";
@@ -47,10 +49,12 @@ async fn send_event_to_relay(messages: Vec<ClientMessage>, relay: &str) -> Resul
         Ok(ws) => {
             // It's important that we call this before we send our first message, otherwise we will
             // not have any event listeners on the socket to receive the echoed message.
-            if let Some(e) = ws.events().err() {
+            let event_stream = ws.events();
+            if let Some(e) = event_stream.as_ref().err() {
                 console_log!("Error calling ws events from relay {relay}: {e:?}");
-                return Err(e.into());
+                return Err(Error::WorkerError(String::from("WS connection error")));
             }
+            let mut event_stream = event_stream.unwrap();
 
             if let Some(e) = ws.accept().err() {
                 console_log!("Error accepting ws from relay {relay}: {e:?}");
@@ -60,6 +64,28 @@ async fn send_event_to_relay(messages: Vec<ClientMessage>, relay: &str) -> Resul
             for message in messages {
                 if let Some(e) = ws.send_with_str(message.as_json()).err() {
                     console_log!("Error sending event to relay {relay}: {e:?}")
+                }
+            }
+
+            // log the first message we received from the relay
+            let sleep = delay(1_000);
+            let event_stream_fut = event_stream.next();
+            pin_mut!(event_stream_fut);
+            pin_mut!(sleep);
+            match futures::future::select(event_stream_fut, sleep).await {
+                futures::future::Either::Left((event_stream_res, _)) => {
+                    if let Some(event) = event_stream_res {
+                        let event = event?;
+
+                        if let WebsocketEvent::Message(msg) = event {
+                            if let Some(text) = msg.text() {
+                                console_log!("websocket event from relay {relay}: {text}")
+                            }
+                        }
+                    }
+                }
+                futures::future::Either::Right(_) => {
+                    // Sleep triggered before we got a websocket response
                 }
             }
 
