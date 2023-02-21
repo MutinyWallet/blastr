@@ -1,3 +1,4 @@
+use crate::nostr::get_nip11_response;
 pub(crate) use crate::nostr::{
     try_queue_event, NOSTR_QUEUE, NOSTR_QUEUE_2, NOSTR_QUEUE_3, NOSTR_QUEUE_4, NOSTR_QUEUE_5,
     NOSTR_QUEUE_6,
@@ -109,7 +110,14 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
 
             empty_response()
         })
-        .get("/", |_, ctx| {
+        .get("/", |req, ctx| {
+            // NIP 11
+            if req.headers().get("Accept").ok().flatten()
+                == Some("application/nostr+json".to_string())
+            {
+                return Response::from_json(&get_nip11_response())?.with_cors(&cors());
+            }
+
             // For websocket compatibility
             let pair = WebSocketPair::new()?;
             let server = pair.server;
