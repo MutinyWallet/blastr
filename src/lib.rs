@@ -2,7 +2,7 @@ pub(crate) use crate::nostr::{
     try_queue_event, NOSTR_QUEUE, NOSTR_QUEUE_2, NOSTR_QUEUE_3, NOSTR_QUEUE_4, NOSTR_QUEUE_5,
     NOSTR_QUEUE_6,
 };
-use ::nostr::{ClientMessage, Event};
+use ::nostr::{ClientMessage, Event, RelayMessage};
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use worker::*;
@@ -59,7 +59,12 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                 {
                                     Some(_) => {
                                         console_log!("event already published: {}", event.id);
-                                        return empty_response();
+                                        let relay_msg = RelayMessage::new_ok(
+                                            event.id,
+                                            false,
+                                            "event already published",
+                                        );
+                                        return relay_response(relay_msg);
                                     }
                                     None => {}
                                 };
@@ -87,27 +92,37 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                 {
                                     Ok(_) => {
                                         console_log!("saved published note: {}", event.id);
+                                        let relay_msg = RelayMessage::new_ok(event.id, true, "");
+                                        relay_response(relay_msg)
                                     }
                                     Err(e) => {
                                         console_log!(
                                             "could not save published note: {} - {e:?}",
                                             event.id
                                         );
+                                        let relay_msg = RelayMessage::new_ok(
+                                            event.id,
+                                            false,
+                                            "error: could not save published note",
+                                        );
+                                        relay_response(relay_msg)
                                     }
                                 }
                             }
                             _ => {
                                 console_log!("ignoring other nostr client message types");
+                                Response::error("Only Event types allowed", 400)
                             }
                         }
+                    } else {
+                        Response::error("Could not parse Client Message", 400)
                     }
                 }
                 Err(e) => {
                     console_log!("could not get request text: {}", e);
+                    Response::error("Could not get request text", 400)
                 }
             }
-
-            empty_response()
         })
         .get("/", |_, ctx| {
             // For websocket compatibility
@@ -143,6 +158,14 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                                     "event already published: {}",
                                                     event.id
                                                 );
+                                                let relay_msg = RelayMessage::new_ok(
+                                                    event.id,
+                                                    false,
+                                                    "event already published",
+                                                );
+                                                server
+                                                    .send_with_str(&relay_msg.as_json())
+                                                    .expect("failed to send response");
                                                 continue;
                                             }
                                             None => {}
@@ -172,12 +195,25 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                         {
                                             Ok(_) => {
                                                 console_log!("saved published note: {}", event.id);
+                                                let relay_msg =
+                                                    RelayMessage::new_ok(event.id, true, "");
+                                                server
+                                                    .send_with_str(&relay_msg.as_json())
+                                                    .expect("failed to send response");
                                             }
                                             Err(e) => {
                                                 console_log!(
                                                     "could not save published note: {} - {e:?}",
                                                     event.id
                                                 );
+                                                let relay_msg = RelayMessage::new_ok(
+                                                    event.id,
+                                                    false,
+                                                    "error: could not save published note",
+                                                );
+                                                server
+                                                    .send_with_str(&relay_msg.as_json())
+                                                    .expect("failed to send response");
                                             }
                                         }
                                     }
@@ -234,6 +270,10 @@ pub fn queue_number(batch_name: &str) -> Result<u32> {
         NOSTR_QUEUE_6 => Ok(5),
         _ => Err("unexpected queue".into()),
     }
+}
+
+fn relay_response(msg: RelayMessage) -> worker::Result<Response> {
+    Response::from_json(&msg)?.with_cors(&cors())
 }
 
 fn empty_response() -> worker::Result<Response> {
