@@ -14,6 +14,7 @@ cfg-if = "0.1.2"
 # Need the queue feature
 worker = { git = "https://github.com/cloudflare/workers-rs", rev = "b4b9cd1f15feac412b6f9e9e9209458cd3b98430", features = ["queue"] }
 futures = "0.3.26"
+# Needed for serde serializaters
 nostr = { git = "https://github.com/benthecarman/nostr", rev = "6c238ac72651671bcfd6666ddcd731767d1643b8" }
 serde = { version = "^1.0", features = ["derive"] }
 

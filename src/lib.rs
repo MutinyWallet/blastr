@@ -191,27 +191,19 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                         {
                                             Ok(_) => {
                                                 console_log!("saved published note: {}", event.id);
-                                                let relay_msg =
-                                                    RelayMessage::new_ok(event.id, true, "");
-                                                server
-                                                    .send_with_str(&relay_msg.as_json())
-                                                    .expect("failed to send response");
                                             }
                                             Err(e) => {
                                                 console_log!(
                                                     "could not save published note: {} - {e:?}",
                                                     event.id
                                                 );
-                                                let relay_msg = RelayMessage::new_ok(
-                                                    event.id,
-                                                    false,
-                                                    "error: could not save published note",
-                                                );
-                                                server
-                                                    .send_with_str(&relay_msg.as_json())
-                                                    .expect("failed to send response");
                                             }
                                         }
+
+                                        let relay_msg = RelayMessage::new_ok(event.id, true, "");
+                                        server
+                                            .send_with_str(&relay_msg.as_json())
+                                            .expect("failed to send response");
                                     }
                                     _ => {
                                         console_log!("ignoring other nostr client message types");
