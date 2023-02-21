@@ -142,6 +142,10 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                 let mut event_stream = server.events().expect("stream error");
                 console_log!("spawned event stream, waiting for first message..");
                 while let Some(event) = event_stream.next().await {
+                    if let Err(e) = event {
+                        console_log!("error parsing some event: {e}");
+                        continue;
+                    }
                     match event.expect("received error in websocket") {
                         WebsocketEvent::Message(msg) => {
                             if msg.text().is_none() {
@@ -221,6 +225,7 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                         }
                         WebsocketEvent::Close(_) => {
                             console_log!("closing");
+                            break;
                         }
                     }
                 }
