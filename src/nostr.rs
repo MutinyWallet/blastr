@@ -2,6 +2,7 @@ use crate::error::Error;
 use futures::pin_mut;
 use futures::StreamExt;
 use nostr::prelude::*;
+use std::string::ToString;
 use std::{time::Duration, vec};
 use worker::WebsocketEvent;
 use worker::{console_log, Cache, Delay, Fetch, Queue, Response, WebSocket};
@@ -23,6 +24,23 @@ const RELAYS: [&str; 8] = [
     "wss://relay.damus.io",
     "wss://nostr.wine",
 ];
+
+pub fn get_nip11_response() -> RelayInformationDocument {
+    let version = env!("CARGO_PKG_VERSION");
+    let supported_nips = vec![1, 11, 20];
+
+    RelayInformationDocument {
+        name: Some("Mutiny blastr relay".to_string()),
+        description: Some("Mutiny blastr relay".to_string()),
+        pubkey: Some(
+            "df173277182f3155d37b330211ba1de4a81500c02d195e964f91be774ec96708".to_string(),
+        ),
+        contact: Some("team@mutinywallet.com".to_string()),
+        supported_nips: Some(supported_nips),
+        software: Some("git+https://github.com/MutinyWallet/blastr.git".to_string()),
+        version: Some(version.to_string()),
+    }
+}
 
 pub async fn try_queue_event(event: Event, nostr_queues: Vec<Queue>) {
     for nostr_queue in nostr_queues.iter() {
