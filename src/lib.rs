@@ -59,7 +59,7 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                 {
                                     Some(_) => {
                                         console_log!("event already published: {}", event.id);
-                                        return fetch();
+                                        return empty_response();
                                     }
                                     None => {}
                                 };
@@ -107,7 +107,7 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                 }
             }
 
-            fetch()
+            empty_response()
         })
         .get("/", |_, ctx| {
             // For websocket compatibility
@@ -195,7 +195,7 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             });
             Response::from_websocket(pair.client)
         })
-        .options("/*catchall", |_, _| fetch())
+        .options("/*catchall", |_, _| empty_response())
         .run(req, env)
         .await
 }
@@ -236,7 +236,7 @@ pub fn queue_number(batch_name: &str) -> Result<u32> {
     }
 }
 
-fn fetch() -> worker::Result<Response> {
+fn empty_response() -> worker::Result<Response> {
     Response::empty()?.with_cors(&cors())
 }
 
