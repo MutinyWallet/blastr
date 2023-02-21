@@ -169,7 +169,7 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                                 false,
                                                 "event already published",
                                             );
-                                            server
+                                            pair.client
                                                 .send_with_str(&relay_msg.as_json())
                                                 .expect("failed to send response");
                                             continue;
@@ -209,7 +209,7 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                         }
 
                                         let relay_msg = RelayMessage::new_ok(event.id, true, "");
-                                        server
+                                        pair.client
                                             .send_with_str(&relay_msg.as_json())
                                             .expect("failed to send response");
                                     }
