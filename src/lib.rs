@@ -52,21 +52,21 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
 
                                 // check if we've already published it before
                                 let published_notes = ctx.kv("PUBLISHED_NOTES")?;
-                                match published_notes
+                                if published_notes
                                     .get(event.id.to_string().as_str())
                                     .json::<PublishedNote>()
-                                    .await?
+                                    .await
+                                    .ok()
+                                    .flatten()
+                                    .is_some()
                                 {
-                                    Some(_) => {
-                                        console_log!("event already published: {}", event.id);
-                                        let relay_msg = RelayMessage::new_ok(
-                                            event.id,
-                                            false,
-                                            "event already published",
-                                        );
-                                        return relay_response(relay_msg);
-                                    }
-                                    None => {}
+                                    console_log!("event already published: {}", event.id);
+                                    let relay_msg = RelayMessage::new_ok(
+                                        event.id,
+                                        false,
+                                        "event already published",
+                                    );
+                                    return relay_response(relay_msg);
                                 };
 
                                 // broadcast it to all queues
@@ -147,28 +147,24 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                         // check if we've already published it before
                                         let published_notes =
                                             ctx.kv("PUBLISHED_NOTES").expect("get kv");
-                                        match published_notes
+                                        if published_notes
                                             .get(event.id.to_string().as_str())
                                             .json::<PublishedNote>()
                                             .await
-                                            .expect("lookup value")
+                                            .ok()
+                                            .flatten()
+                                            .is_some()
                                         {
-                                            Some(_) => {
-                                                console_log!(
-                                                    "event already published: {}",
-                                                    event.id
-                                                );
-                                                let relay_msg = RelayMessage::new_ok(
-                                                    event.id,
-                                                    false,
-                                                    "event already published",
-                                                );
-                                                server
-                                                    .send_with_str(&relay_msg.as_json())
-                                                    .expect("failed to send response");
-                                                continue;
-                                            }
-                                            None => {}
+                                            console_log!("event already published: {}", event.id);
+                                            let relay_msg = RelayMessage::new_ok(
+                                                event.id,
+                                                false,
+                                                "event already published",
+                                            );
+                                            server
+                                                .send_with_str(&relay_msg.as_json())
+                                                .expect("failed to send response");
+                                            continue;
                                         };
 
                                         // broadcast it to all queues
