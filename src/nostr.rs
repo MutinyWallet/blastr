@@ -1,4 +1,5 @@
 use crate::error::Error;
+use futures::future::Either;
 use futures::pin_mut;
 use futures::StreamExt;
 use nostr::prelude::*;
@@ -63,7 +64,20 @@ async fn send_event_to_relay(messages: Vec<ClientMessage>, relay: &str) -> Resul
     if relay == "wss://nostr.mutinywallet.com" {
         return Ok(());
     }
-    match WebSocket::connect(relay.parse().unwrap()).await {
+    let connect_timeout = delay(10_000);
+    let connect_future = WebSocket::connect(relay.parse().unwrap());
+
+    pin_mut!(connect_timeout);
+    pin_mut!(connect_future);
+
+    let either = futures::future::select(connect_future, connect_timeout).await;
+
+    let ws_opt = match either {
+        Either::Left((res, _)) => res,
+        Either::Right(_) => Err(worker::Error::RustError("Connection timeout".to_string())),
+    };
+
+    match ws_opt {
         Ok(ws) => {
             // It's important that we call this before we send our first message, otherwise we will
             // not have any event listeners on the socket to receive the echoed message.
@@ -91,7 +105,7 @@ async fn send_event_to_relay(messages: Vec<ClientMessage>, relay: &str) -> Resul
             pin_mut!(event_stream_fut);
             pin_mut!(sleep);
             match futures::future::select(event_stream_fut, sleep).await {
-                futures::future::Either::Left((event_stream_res, _)) => {
+                Either::Left((event_stream_res, _)) => {
                     if let Some(event) = event_stream_res {
                         let event = event?;
 
@@ -102,7 +116,7 @@ async fn send_event_to_relay(messages: Vec<ClientMessage>, relay: &str) -> Resul
                         }
                     }
                 }
-                futures::future::Either::Right(_) => {
+                Either::Right(_) => {
                     // Sleep triggered before we got a websocket response
                 }
             }
@@ -112,7 +126,8 @@ async fn send_event_to_relay(messages: Vec<ClientMessage>, relay: &str) -> Resul
             }
         }
         Err(e) => {
-            console_log!("Error connecting to relay {relay}: {e:?}")
+            console_log!("Error connecting to relay {relay}: {e:?}");
+            return Err(Error::WorkerError(String::from("WS connection error")));
         }
     };
 
