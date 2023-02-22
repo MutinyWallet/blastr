@@ -232,6 +232,10 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             });
             Response::from_websocket(pair.client)
         })
+        .get("/favicon.ico", |_, _| {
+            let bytes: Vec<u8> = include_bytes!("../static/favicon.ico").to_vec();
+            Response::from_bytes(bytes)?.with_cors(&cors())
+        })
         .options("/*catchall", |_, _| empty_response())
         .run(req, env)
         .await
