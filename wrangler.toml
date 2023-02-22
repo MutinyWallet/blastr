@@ -41,33 +41,33 @@ WORKERS_RS_VERSION = "0.0.11"
 
 [[queues.consumers]]
  queue = "nostr-events-pub"
- max_batch_size = 10
- max_batch_timeout = 30
+ max_batch_size = 15
+ max_batch_timeout = 15
 
 [[queues.consumers]]
  queue = "nostr-events-pub-2"
- max_batch_size = 10
- max_batch_timeout = 30
+ max_batch_size = 15
+ max_batch_timeout = 15
 
 [[queues.consumers]]
  queue = "nostr-events-pub-3"
- max_batch_size = 10
- max_batch_timeout = 30
+ max_batch_size = 15
+ max_batch_timeout = 15
 
 [[queues.consumers]]
  queue = "nostr-events-pub-4"
- max_batch_size = 10
- max_batch_timeout = 30
+ max_batch_size = 15
+ max_batch_timeout = 15
 
 [[queues.consumers]]
  queue = "nostr-events-pub-5"
- max_batch_size = 10
- max_batch_timeout = 30
+ max_batch_size = 15
+ max_batch_timeout = 15
 
 [[queues.consumers]]
  queue = "nostr-events-pub-6"
- max_batch_size = 10
- max_batch_timeout = 30
+ max_batch_size = 15
+ max_batch_timeout = 15
 
 [build]
 command = "cargo install --git https://github.com/CathalMullan/workers-rs worker-build && worker-build --release"
