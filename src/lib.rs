@@ -217,6 +217,15 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                             .send_with_str(&relay_msg.as_json())
                                             .expect("failed to send response");
                                     }
+                                    ClientMessage::Req {
+                                        subscription_id, ..
+                                    } => {
+                                        console_log!("ignoring nostr subscription request");
+                                        let relay_msg = RelayMessage::new_eose(subscription_id);
+                                        server
+                                            .send_with_str(&relay_msg.as_json())
+                                            .expect("failed to send response");
+                                    }
                                     _ => {
                                         console_log!("ignoring other nostr client message types");
                                     }
