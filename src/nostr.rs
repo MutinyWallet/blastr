@@ -28,7 +28,7 @@ const RELAYS: [&str; 8] = [
 
 pub fn get_nip11_response() -> RelayInformationDocument {
     let version = env!("CARGO_PKG_VERSION");
-    let supported_nips = vec![1, 11, 20];
+    let supported_nips = vec![1, 11, 15, 20];
 
     RelayInformationDocument {
         name: Some("Mutiny blastr relay".to_string()),
