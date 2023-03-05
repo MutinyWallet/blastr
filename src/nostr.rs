@@ -8,12 +8,16 @@ use std::{time::Duration, vec};
 use worker::WebsocketEvent;
 use worker::{console_log, Cache, Delay, Fetch, Queue, Response, WebSocket};
 
-pub(crate) const NOSTR_QUEUE: &str = "nostr-events-pub";
+pub(crate) const NOSTR_QUEUE: &str = "nostr-events-pub-1";
 pub(crate) const NOSTR_QUEUE_2: &str = "nostr-events-pub-2";
 pub(crate) const NOSTR_QUEUE_3: &str = "nostr-events-pub-3";
 pub(crate) const NOSTR_QUEUE_4: &str = "nostr-events-pub-4";
 pub(crate) const NOSTR_QUEUE_5: &str = "nostr-events-pub-5";
-pub(crate) const NOSTR_QUEUE_6: &str = "nostr-events-pub-6";
+pub(crate) const NOSTR_QUEUE_6: &str = "nostr-events-pub-6-a";
+pub(crate) const NOSTR_QUEUE_7: &str = "nostr-events-pub-7";
+pub(crate) const NOSTR_QUEUE_8: &str = "nostr-events-pub-8";
+pub(crate) const NOSTR_QUEUE_9: &str = "nostr-events-pub-9";
+pub(crate) const NOSTR_QUEUE_10: &str = "nostr-events-pub-10";
 const RELAY_LIST_URL: &str = "https://api.nostr.watch/v1/online";
 const RELAYS: [&str; 8] = [
     "wss://nostr.zebedee.cloud",
@@ -209,8 +213,8 @@ fn get_sub_vec_range(original: Vec<String>, range: (usize, usize)) -> Vec<String
 }
 
 fn find_range_from_part(part: u32) -> (usize, usize) {
-    let start = 48 * part;
-    let end = start + 47;
+    let start = 30 * part;
+    let end = start + 29;
     (start as usize, end as usize)
 }
 

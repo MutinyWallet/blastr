@@ -1,4 +1,8 @@
 use crate::nostr::get_nip11_response;
+use crate::nostr::NOSTR_QUEUE_10;
+use crate::nostr::NOSTR_QUEUE_7;
+use crate::nostr::NOSTR_QUEUE_8;
+use crate::nostr::NOSTR_QUEUE_9;
 pub(crate) use crate::nostr::{
     try_queue_event, NOSTR_QUEUE, NOSTR_QUEUE_2, NOSTR_QUEUE_3, NOSTR_QUEUE_4, NOSTR_QUEUE_5,
     NOSTR_QUEUE_6,
@@ -78,6 +82,10 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                     ctx.env.queue(NOSTR_QUEUE_4).expect("get queue"),
                                     ctx.env.queue(NOSTR_QUEUE_5).expect("get queue"),
                                     ctx.env.queue(NOSTR_QUEUE_6).expect("get queue"),
+                                    ctx.env.queue(NOSTR_QUEUE_7).expect("get queue"),
+                                    ctx.env.queue(NOSTR_QUEUE_8).expect("get queue"),
+                                    ctx.env.queue(NOSTR_QUEUE_9).expect("get queue"),
+                                    ctx.env.queue(NOSTR_QUEUE_10).expect("get queue"),
                                 ];
                                 try_queue_event(*event.clone(), nostr_queues).await;
                                 console_log!("queued up nostr event: {}", event.id);
@@ -187,6 +195,10 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                             ctx.env.queue(NOSTR_QUEUE_4).expect("get queue"),
                                             ctx.env.queue(NOSTR_QUEUE_5).expect("get queue"),
                                             ctx.env.queue(NOSTR_QUEUE_6).expect("get queue"),
+                                            ctx.env.queue(NOSTR_QUEUE_7).expect("get queue"),
+                                            ctx.env.queue(NOSTR_QUEUE_8).expect("get queue"),
+                                            ctx.env.queue(NOSTR_QUEUE_9).expect("get queue"),
+                                            ctx.env.queue(NOSTR_QUEUE_10).expect("get queue"),
                                         ];
                                         try_queue_event(*event.clone(), nostr_queues).await;
                                         console_log!("queued up nostr event: {}", event.id);
@@ -273,6 +285,10 @@ pub fn queue_number(batch_name: &str) -> Result<u32> {
         NOSTR_QUEUE_4 => Ok(3),
         NOSTR_QUEUE_5 => Ok(4),
         NOSTR_QUEUE_6 => Ok(5),
+        NOSTR_QUEUE_7 => Ok(6),
+        NOSTR_QUEUE_8 => Ok(7),
+        NOSTR_QUEUE_9 => Ok(8),
+        NOSTR_QUEUE_10 => Ok(9),
         _ => Err("unexpected queue".into()),
     }
 }

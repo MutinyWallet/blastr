@@ -16,8 +16,8 @@ kv_namespaces = [
 WORKERS_RS_VERSION = "0.0.11"
 
 [[queues.producers]]
- queue = "nostr-events-pub"
- binding = "nostr-events-pub"
+ queue = "nostr-events-pub-1"
+ binding = "nostr-events-pub-1"
 
 [[queues.producers]]
  queue = "nostr-events-pub-2"
@@ -36,37 +36,74 @@ WORKERS_RS_VERSION = "0.0.11"
  binding = "nostr-events-pub-5"
 
 [[queues.producers]]
- queue = "nostr-events-pub-6"
- binding = "nostr-events-pub-6"
+ queue = "nostr-events-pub-6-a"
+ binding = "nostr-events-pub-6-a"
 
+[[queues.producers]]
+ queue = "nostr-events-pub-7"
+ binding = "nostr-events-pub-7"
+
+[[queues.producers]]
+ queue = "nostr-events-pub-8"
+ binding = "nostr-events-pub-8"
+
+[[queues.producers]]
+ queue = "nostr-events-pub-9"
+ binding = "nostr-events-pub-9"
+
+[[queues.producers]]
+ queue = "nostr-events-pub-10"
+ binding = "nostr-events-pub-10"
+
+# consumers
 [[queues.consumers]]
- queue = "nostr-events-pub"
+ queue = "nostr-events-pub-1"
  max_batch_size = 15
- max_batch_timeout = 15
+ max_batch_timeout = 5 # this is the best one, run quicker
 
 [[queues.consumers]]
  queue = "nostr-events-pub-2"
- max_batch_size = 15
+ max_batch_size = 20
  max_batch_timeout = 15
 
 [[queues.consumers]]
  queue = "nostr-events-pub-3"
- max_batch_size = 15
+ max_batch_size = 20
  max_batch_timeout = 15
 
 [[queues.consumers]]
  queue = "nostr-events-pub-4"
- max_batch_size = 15
+ max_batch_size = 20
  max_batch_timeout = 15
 
 [[queues.consumers]]
  queue = "nostr-events-pub-5"
- max_batch_size = 15
+ max_batch_size = 20
  max_batch_timeout = 15
 
 [[queues.consumers]]
- queue = "nostr-events-pub-6"
- max_batch_size = 15
+ queue = "nostr-events-pub-6-a"
+ max_batch_size = 20
+ max_batch_timeout = 15
+
+[[queues.consumers]]
+ queue = "nostr-events-pub-7"
+ max_batch_size = 20
+ max_batch_timeout = 15
+
+[[queues.consumers]]
+ queue = "nostr-events-pub-8"
+ max_batch_size = 20
+ max_batch_timeout = 15
+
+[[queues.consumers]]
+ queue = "nostr-events-pub-9"
+ max_batch_size = 20
+ max_batch_timeout = 15
+
+[[queues.consumers]]
+ queue = "nostr-events-pub-10"
+ max_batch_size = 20
  max_batch_timeout = 15
 
 [build]
