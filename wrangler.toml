@@ -58,7 +58,7 @@ WORKERS_RS_VERSION = "0.0.11"
 # consumers
 [[queues.consumers]]
  queue = "nostr-events-pub-1"
- max_batch_size = 15
+ max_batch_size = 20
  max_batch_timeout = 5 # this is the best one, run quicker
 
 [[queues.consumers]]
