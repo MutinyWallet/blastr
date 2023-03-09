@@ -147,6 +147,7 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             server.accept()?;
             console_log!("accepted websocket, about to spawn event stream");
             wasm_bindgen_futures::spawn_local(async move {
+                let mut last_event_time: Option<f64> = None;
                 let mut event_stream = server.events().expect("stream error");
                 console_log!("spawned event stream, waiting for first message..");
                 while let Some(event) = event_stream.next().await {
@@ -163,6 +164,21 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                 match client_msg {
                                     ClientMessage::Event(event) => {
                                         console_log!("got an event from client: {}", event.id);
+
+                                        // Rate limit events to 1 per 0.5 seconds
+                                        let now: f64 = worker::js_sys::Date::now();
+                                        if let Some(last) = last_event_time {
+                                            let time_since_last = now - last;
+                                            if time_since_last < 500_f64 {
+                                                console_log!("ignoring event, too many events in a short time, time since last event: {}ms", time_since_last);
+                                                let relay_msg = RelayMessage::new_ok(event.id, false, "rate-limited: slow down there chief");
+                                                server
+                                                    .send_with_str(&relay_msg.as_json())
+                                                    .expect("failed to send response");
+                                                continue;
+                                            }
+                                        }
+                                        last_event_time = Some(now);
 
                                         // check if we've already published it before
                                         let published_notes =
