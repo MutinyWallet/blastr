@@ -58,52 +58,52 @@ WORKERS_RS_VERSION = "0.0.13"
 # consumers
 [[queues.consumers]]
  queue = "nostr-events-pub-1-b"
- max_batch_size = 20
+ max_batch_size = 100
  max_batch_timeout = 5 # this is the best one, run quicker
 
 [[queues.consumers]]
  queue = "nostr-events-pub-2-b"
- max_batch_size = 20
+ max_batch_size = 100
  max_batch_timeout = 15
 
 [[queues.consumers]]
  queue = "nostr-events-pub-3-b"
- max_batch_size = 20
+ max_batch_size = 100
  max_batch_timeout = 15
 
 [[queues.consumers]]
  queue = "nostr-events-pub-4-b"
- max_batch_size = 20
+ max_batch_size = 100
  max_batch_timeout = 15
 
 [[queues.consumers]]
  queue = "nostr-events-pub-5-b"
- max_batch_size = 20
+ max_batch_size = 100
  max_batch_timeout = 15
 
 [[queues.consumers]]
  queue = "nostr-events-pub-6-b"
- max_batch_size = 20
+ max_batch_size = 100
  max_batch_timeout = 15
 
 [[queues.consumers]]
  queue = "nostr-events-pub-7-b"
- max_batch_size = 20
+ max_batch_size = 100
  max_batch_timeout = 15
 
 [[queues.consumers]]
  queue = "nostr-events-pub-8-b"
- max_batch_size = 20
+ max_batch_size = 100
  max_batch_timeout = 15
 
 [[queues.consumers]]
  queue = "nostr-events-pub-9-b"
- max_batch_size = 20
+ max_batch_size = 100
  max_batch_timeout = 15
 
 [[queues.consumers]]
  queue = "nostr-events-pub-10-b"
- max_batch_size = 20
+ max_batch_size = 100
  max_batch_timeout = 15
 
 [build]
