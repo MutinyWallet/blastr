@@ -13,99 +13,98 @@ kv_namespaces = [
 ]
 
 [vars]
-WORKERS_RS_VERSION = "0.0.11"
+WORKERS_RS_VERSION = "0.0.13"
 
 [[queues.producers]]
- queue = "nostr-events-pub-1"
- binding = "nostr-events-pub-1"
+ queue = "nostr-events-pub-1-b"
+ binding = "nostr-events-pub-1-b"
 
 [[queues.producers]]
- queue = "nostr-events-pub-2"
- binding = "nostr-events-pub-2"
+ queue = "nostr-events-pub-2-b"
+ binding = "nostr-events-pub-2-b"
 
 [[queues.producers]]
- queue = "nostr-events-pub-3"
- binding = "nostr-events-pub-3"
+ queue = "nostr-events-pub-3-b"
+ binding = "nostr-events-pub-3-b"
 
 [[queues.producers]]
- queue = "nostr-events-pub-4"
- binding = "nostr-events-pub-4"
+ queue = "nostr-events-pub-4-b"
+ binding = "nostr-events-pub-4-b"
 
 [[queues.producers]]
- queue = "nostr-events-pub-5"
- binding = "nostr-events-pub-5"
+ queue = "nostr-events-pub-5-b"
+ binding = "nostr-events-pub-5-b"
 
 [[queues.producers]]
- queue = "nostr-events-pub-6-a"
- binding = "nostr-events-pub-6-a"
+ queue = "nostr-events-pub-6-b"
+ binding = "nostr-events-pub-6-b"
 
 [[queues.producers]]
- queue = "nostr-events-pub-7"
- binding = "nostr-events-pub-7"
+ queue = "nostr-events-pub-7-b"
+ binding = "nostr-events-pub-7-b"
 
 [[queues.producers]]
- queue = "nostr-events-pub-8"
- binding = "nostr-events-pub-8"
+ queue = "nostr-events-pub-8-b"
+ binding = "nostr-events-pub-8-b"
 
 [[queues.producers]]
- queue = "nostr-events-pub-9"
- binding = "nostr-events-pub-9"
+ queue = "nostr-events-pub-9-b"
+ binding = "nostr-events-pub-9-b"
 
 [[queues.producers]]
- queue = "nostr-events-pub-10"
- binding = "nostr-events-pub-10"
+ queue = "nostr-events-pub-10-b"
+ binding = "nostr-events-pub-10-b"
 
 # consumers
 [[queues.consumers]]
- queue = "nostr-events-pub-1"
+ queue = "nostr-events-pub-1-b"
  max_batch_size = 20
  max_batch_timeout = 5 # this is the best one, run quicker
 
 [[queues.consumers]]
- queue = "nostr-events-pub-2"
+ queue = "nostr-events-pub-2-b"
  max_batch_size = 20
  max_batch_timeout = 15
 
 [[queues.consumers]]
- queue = "nostr-events-pub-3"
+ queue = "nostr-events-pub-3-b"
  max_batch_size = 20
  max_batch_timeout = 15
 
 [[queues.consumers]]
- queue = "nostr-events-pub-4"
+ queue = "nostr-events-pub-4-b"
  max_batch_size = 20
  max_batch_timeout = 15
 
 [[queues.consumers]]
- queue = "nostr-events-pub-5"
+ queue = "nostr-events-pub-5-b"
  max_batch_size = 20
  max_batch_timeout = 15
 
 [[queues.consumers]]
- queue = "nostr-events-pub-6-a"
+ queue = "nostr-events-pub-6-b"
  max_batch_size = 20
  max_batch_timeout = 15
 
 [[queues.consumers]]
- queue = "nostr-events-pub-7"
+ queue = "nostr-events-pub-7-b"
  max_batch_size = 20
  max_batch_timeout = 15
 
 [[queues.consumers]]
- queue = "nostr-events-pub-8"
+ queue = "nostr-events-pub-8-b"
  max_batch_size = 20
  max_batch_timeout = 15
 
 [[queues.consumers]]
- queue = "nostr-events-pub-9"
+ queue = "nostr-events-pub-9-b"
  max_batch_size = 20
  max_batch_timeout = 15
 
 [[queues.consumers]]
- queue = "nostr-events-pub-10"
+ queue = "nostr-events-pub-10-b"
  max_batch_size = 20
  max_batch_timeout = 15
 
 [build]
-command = "cargo install --git https://github.com/CathalMullan/workers-rs worker-build && worker-build --release"
-#command = "cargo install -q worker-build --version 0.0.7 && worker-build --release"
+command = "cargo install -q worker-build --version 0.0.9 && worker-build --release"

@@ -79,13 +79,13 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                     ctx.env.queue(NOSTR_QUEUE).expect("get queue"),
                                     ctx.env.queue(NOSTR_QUEUE_2).expect("get queue"),
                                     ctx.env.queue(NOSTR_QUEUE_3).expect("get queue"),
-                                    ctx.env.queue(NOSTR_QUEUE_4).expect("get queue"),
-                                    ctx.env.queue(NOSTR_QUEUE_5).expect("get queue"),
-                                    ctx.env.queue(NOSTR_QUEUE_6).expect("get queue"),
-                                    ctx.env.queue(NOSTR_QUEUE_7).expect("get queue"),
-                                    ctx.env.queue(NOSTR_QUEUE_8).expect("get queue"),
-                                    ctx.env.queue(NOSTR_QUEUE_9).expect("get queue"),
-                                    ctx.env.queue(NOSTR_QUEUE_10).expect("get queue"),
+                                    //ctx.env.queue(NOSTR_QUEUE_4).expect("get queue"),
+                                    //ctx.env.queue(NOSTR_QUEUE_5).expect("get queue"),
+                                    //ctx.env.queue(NOSTR_QUEUE_6).expect("get queue"),
+                                    //ctx.env.queue(NOSTR_QUEUE_7).expect("get queue"),
+                                    //ctx.env.queue(NOSTR_QUEUE_8).expect("get queue"),
+                                    //ctx.env.queue(NOSTR_QUEUE_9).expect("get queue"),
+                                    //ctx.env.queue(NOSTR_QUEUE_10).expect("get queue"),
                                 ];
                                 try_queue_event(*event.clone(), nostr_queues).await;
                                 console_log!("queued up nostr event: {}", event.id);
@@ -192,13 +192,13 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                             ctx.env.queue(NOSTR_QUEUE).expect("get queue"),
                                             ctx.env.queue(NOSTR_QUEUE_2).expect("get queue"),
                                             ctx.env.queue(NOSTR_QUEUE_3).expect("get queue"),
-                                            ctx.env.queue(NOSTR_QUEUE_4).expect("get queue"),
-                                            ctx.env.queue(NOSTR_QUEUE_5).expect("get queue"),
-                                            ctx.env.queue(NOSTR_QUEUE_6).expect("get queue"),
-                                            ctx.env.queue(NOSTR_QUEUE_7).expect("get queue"),
-                                            ctx.env.queue(NOSTR_QUEUE_8).expect("get queue"),
-                                            ctx.env.queue(NOSTR_QUEUE_9).expect("get queue"),
-                                            ctx.env.queue(NOSTR_QUEUE_10).expect("get queue"),
+                                            //ctx.env.queue(NOSTR_QUEUE_4).expect("get queue"),
+                                            //ctx.env.queue(NOSTR_QUEUE_5).expect("get queue"),
+                                            //ctx.env.queue(NOSTR_QUEUE_6).expect("get queue"),
+                                            //ctx.env.queue(NOSTR_QUEUE_7).expect("get queue"),
+                                            //ctx.env.queue(NOSTR_QUEUE_8).expect("get queue"),
+                                            //ctx.env.queue(NOSTR_QUEUE_9).expect("get queue"),
+                                            //ctx.env.queue(NOSTR_QUEUE_10).expect("get queue"),
                                         ];
                                         try_queue_event(*event.clone(), nostr_queues).await;
                                         console_log!("queued up nostr event: {}", event.id);
