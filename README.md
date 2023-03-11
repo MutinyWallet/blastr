@@ -18,6 +18,9 @@ With `wrangler`, you can build, test, and deploy your Worker with the following 
 # install wrangler if you do not have it yet
 $ npm install -g wrangler
 
+# log into cloudflare if you havent before
+$ wrangler login
+
 # compiles your project to WebAssembly and will warn of any issues
 $ npm run build
 
@@ -26,6 +29,36 @@ $ npm run dev
 
 # deploy your Worker globally to the Cloudflare network (update your wrangler.toml file for configuration)
 $ npm run deploy
+```
+
+### Setup
+
+There's a few cloudflare components that Blastr uses behind the scenes, namely a KV store and multiple queues to distribute the load.
+
+Right now some of these are hardcoded for us since they have to map from the `wrangler.toml` file to the rust codebase. Need a TODO for making this more dynamic.
+
+#### KV store
+
+This doesn't rebroadcast events that have already been broadcasted before. So we have a KV for that.
+
+```
+wrangler kv:namespace create PUBLISHED_NOTES
+wrangler kv:namespace create PUBLISHED_NOTES --preview
+```
+
+#### Queues
+
+```
+ wrangler queues create nostr-events-pub-1-b
+ wrangler queues create nostr-events-pub-2-b
+ wrangler queues create nostr-events-pub-3-b
+ wrangler queues create nostr-events-pub-4-b
+ wrangler queues create nostr-events-pub-5-b
+ wrangler queues create nostr-events-pub-6-b
+ wrangler queues create nostr-events-pub-7-b
+ wrangler queues create nostr-events-pub-8-b
+ wrangler queues create nostr-events-pub-9-b
+ wrangler queues create nostr-events-pub-10-b
 ```
 
 Read the latest `worker` crate documentation here: https://docs.rs/worker
@@ -41,6 +74,8 @@ routes = [
     { pattern = "example.com/about", zone_id = "<YOUR_ZONE_ID>" } # replace with your info
 ]
 ```
+
+and any other info in `wrangler.toml` that is custom to you, like the names / id's of queues or kv's.
 
 ### WebAssembly
 

@@ -2,12 +2,15 @@ name = "blastr"
 main = "build/worker/shim.mjs"
 compatibility_date = "2022-01-20"
 
-# replace with your info
+# replace with your domain info - TODO this might not be required but we added it for ours.
 routes = [
     { pattern = "nostr.mutinywallet.com/", zone_id = "2b9268714ce8d1c4431e8046d4ba55d3" },
     { pattern = "nostr.mutinywallet.com/event", zone_id = "2b9268714ce8d1c4431e8046d4ba55d3" }
 ]
 
+# replace with your KV store info
+# create the queues with `wrangler kv:namespace create PUBLISHED_NOTES` and the same command with the `--preview` flag.
+# put your queue IDs below
 kv_namespaces = [
   { binding = "PUBLISHED_NOTES", id = "afa24a392a5a41f6b1655507dfd9b97a", preview_id = "0b334aece8d74c3ab90e3e99db569ce8" }
 ]
@@ -15,6 +18,9 @@ kv_namespaces = [
 [vars]
 WORKERS_RS_VERSION = "0.0.13"
 
+# Replace with all the queues you created, if you named them different.
+# create the queues with: `wrangler queues create {NAME}`
+# TODO make these more dynamic
 [[queues.producers]]
  queue = "nostr-events-pub-1-b"
  binding = "nostr-events-pub-1-b"
