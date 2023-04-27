@@ -29,6 +29,10 @@ pub struct PublishedNote {
     date: String,
 }
 
+/// The list of event kinds that are disallowed for the Nostr relay
+/// currently, this is just the NIP-95 event
+const DISALLOWED_EVENT_KINDS: [u32; 1] = [1064];
+
 /// Main function for the Cloudflare Worker that triggers off of a HTTP req
 #[event(fetch)]
 pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
@@ -54,6 +58,21 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                         match client_msg {
                             ClientMessage::Event(event) => {
                                 console_log!("got an event from client: {}", event.id);
+
+                                // check if disallowed event kind
+                                if DISALLOWED_EVENT_KINDS.contains(&event.kind.as_u32()) {
+                                    console_log!(
+                                        "invalid event kind {}: {}",
+                                        event.kind.as_u32(),
+                                        event.id
+                                    );
+                                    let relay_msg = RelayMessage::new_ok(
+                                        event.id,
+                                        false,
+                                        "disallowed event kind",
+                                    );
+                                    return relay_response(relay_msg);
+                                };
 
                                 // check if we've already published it before
                                 let published_notes = ctx.kv("PUBLISHED_NOTES")?;
@@ -163,6 +182,24 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                 match client_msg {
                                     ClientMessage::Event(event) => {
                                         console_log!("got an event from client: {}", event.id);
+
+                                        // check if disallowed event kind
+                                        if DISALLOWED_EVENT_KINDS.contains(&event.kind.as_u32()) {
+                                            console_log!(
+                                                "invalid event kind {}: {}",
+                                                event.kind.as_u32(),
+                                                event.id
+                                            );
+                                            let relay_msg = RelayMessage::new_ok(
+                                                event.id,
+                                                false,
+                                                "disallowed event kind",
+                                            );
+                                            server
+                                                .send_with_str(&relay_msg.as_json())
+                                                .expect("failed to send response");
+                                            continue;
+                                        };
 
                                         // check if we've already published it before
                                         let published_notes =
