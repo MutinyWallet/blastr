@@ -41,9 +41,17 @@ Right now some of these are hardcoded for us since they have to map from the `wr
 
 This doesn't rebroadcast events that have already been broadcasted before. So we have a KV for that.
 
+We also have a KV for storing the NWC requests and responses to get around ephemeral events.
+
 ```
 wrangler kv:namespace create PUBLISHED_NOTES
 wrangler kv:namespace create PUBLISHED_NOTES --preview
+
+wrangler kv:namespace create NWC_REQUESTS
+wrangler kv:namespace create NWC_REQUESTS --preview
+
+wrangler kv:namespace create NWC_RESPONSES
+wrangler kv:namespace create NWC_RESPONSES --preview
 ```
 
 #### Queues

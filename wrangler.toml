@@ -12,7 +12,9 @@ routes = [
 # create the queues with `wrangler kv:namespace create PUBLISHED_NOTES` and the same command with the `--preview` flag.
 # put your queue IDs below
 kv_namespaces = [
-  { binding = "PUBLISHED_NOTES", id = "afa24a392a5a41f6b1655507dfd9b97a", preview_id = "0b334aece8d74c3ab90e3e99db569ce8" }
+  { binding = "PUBLISHED_NOTES", id = "afa24a392a5a41f6b1655507dfd9b97a", preview_id = "0b334aece8d74c3ab90e3e99db569ce8" },
+  { binding = "NWC_REQUESTS", id = "e5bd788ddc16410bb108df0f2ae89e62", preview_id = "63d99f551a464ff78bbbbee7113cb658" },
+  { binding = "NWC_RESPONSES", id = "5b434d5eced84abaad1c9a44448ac71c", preview_id = "af27b55b58754562b4250dcd3682547b" },
 ]
 
 [vars]
