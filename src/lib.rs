@@ -345,7 +345,7 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                             }
                                         }
 
-                                        // send all found evens to the user
+                                        // send all found events to the user
                                         for event in events {
                                             console_log!("sending event to client: {}", &event.id);
                                             let relay_msg = RelayMessage::new_event(
