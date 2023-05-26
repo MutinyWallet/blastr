@@ -357,7 +357,7 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                                 .expect("failed to send response");
                                         }
 
-                                        console_log!("ignoring nostr subscription request");
+                                        console_log!("end of subscription request");
                                         let relay_msg = RelayMessage::new_eose(subscription_id);
                                         server
                                             .send_with_str(&relay_msg.as_json())
