@@ -446,6 +446,12 @@ pub async fn get_nwc_events(
             .await?
             .unwrap_or_default();
         for nwc_event in nwc_events {
+            // delete responses since we don't care after sending
+            if kind == Kind::WalletConnectResponse {
+                if let Err(e) = delete_nwc_response(&nwc_event, ctx).await {
+                    console_log!("failed to delete nwc response: {e}");
+                }
+            }
             events.push(nwc_event);
         }
     }
@@ -497,7 +503,7 @@ pub async fn handle_nwc_event(
 /// When a NWC request has been fulfilled, delete the request from KV
 pub async fn delete_nwc_request(event: Event, ctx: &RouteContext<()>) -> Result<()> {
     let kv_store = match event.kind {
-        Kind::WalletConnectResponse => ctx.kv("NWC_RESPONSES")?,
+        Kind::WalletConnectResponse => ctx.kv("NWC_REQUESTS")?,
         _ => return Ok(()), // skip other event types
     };
 
@@ -514,7 +520,7 @@ pub async fn delete_nwc_request(event: Event, ctx: &RouteContext<()>) -> Result<
 
                     // save new vector of events
                     kv_store.put(key, new_events)?.execute().await?;
-                    console_log!("deleted nwc event: {}", event_id);
+                    console_log!("deleted nwc request event: {}", event_id);
                 }
                 Ok(None) => return Ok(()),
                 Err(e) => {
@@ -523,6 +529,31 @@ pub async fn delete_nwc_request(event: Event, ctx: &RouteContext<()>) -> Result<
                 }
             };
         };
+    };
+
+    Ok(())
+}
+
+pub async fn delete_nwc_response(event: &Event, ctx: &RouteContext<()>) -> Result<()> {
+    let kv_store = match event.kind {
+        Kind::WalletConnectResponse => ctx.kv("NWC_RESPONSES")?,
+        _ => return Ok(()), // skip other event types
+    };
+
+    let key = &event.pubkey.to_string();
+    match kv_store.get(key).json::<Vec<Event>>().await {
+        Ok(Some(current)) => {
+            let new_events: Vec<Event> = current.into_iter().filter(|e| e.id != event.id).collect();
+
+            // save new vector of events
+            kv_store.put(key, new_events)?.execute().await?;
+            console_log!("deleted nwc response event: {}", event.id);
+        }
+        Ok(None) => return Ok(()),
+        Err(e) => {
+            console_log!("error getting nwc events from KV: {e}");
+            return Ok(());
+        }
     };
 
     Ok(())
