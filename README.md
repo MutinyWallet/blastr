@@ -31,6 +31,14 @@ $ npm run dev
 $ npm run deploy
 ```
 
+## Staging
+
+Production deployments happen automatically but staging is manually for now. Deploy whenever you need to test changes before merging to master.
+
+```
+wrangler publish --env staging
+```
+
 ### Setup
 
 There's a few cloudflare components that Blastr uses behind the scenes, namely a KV store and multiple queues to distribute the load.
