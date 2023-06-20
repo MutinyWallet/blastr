@@ -1,12 +1,13 @@
 use crate::error::Error;
+use crate::utils::delay;
 use futures::future::Either;
 use futures::pin_mut;
 use futures::StreamExt;
 use nostr::prelude::*;
 use std::string::ToString;
-use std::{time::Duration, vec};
+use std::vec;
 use worker::WebsocketEvent;
-use worker::{console_log, Cache, Delay, Fetch, Queue, Response, WebSocket};
+use worker::{console_log, Cache, Fetch, Queue, Response, WebSocket};
 
 pub(crate) const NOSTR_QUEUE: &str = "nostr-events-pub-1-b";
 pub(crate) const NOSTR_QUEUE_2: &str = "nostr-events-pub-2-b";
@@ -78,7 +79,10 @@ async fn send_event_to_relay(messages: Vec<ClientMessage>, relay: &str) -> Resul
 
     let ws_opt = match either {
         Either::Left((res, _)) => res,
-        Either::Right(_) => Err(worker::Error::RustError("Connection timeout".to_string())),
+        Either::Right(_) => {
+            console_log!("time delay hit, stopping...");
+            Err(worker::Error::RustError("Connection timeout".to_string()))
+        }
     };
 
     match ws_opt {
@@ -121,6 +125,7 @@ async fn send_event_to_relay(messages: Vec<ClientMessage>, relay: &str) -> Resul
                     }
                 }
                 Either::Right(_) => {
+                    console_log!("time delay hit, stopping...");
                     // Sleep triggered before we got a websocket response
                 }
             }
@@ -216,10 +221,4 @@ fn find_range_from_part(part: u32) -> (usize, usize) {
     let start = 30 * part;
     let end = start + 29;
     (start as usize, end as usize)
-}
-
-async fn delay(delay: u64) {
-    let delay: Delay = Duration::from_millis(delay).into();
-    delay.await;
-    console_log!("time delay hit, stopping...");
 }

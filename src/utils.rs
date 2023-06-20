@@ -1,4 +1,6 @@
 use cfg_if::cfg_if;
+use std::time::Duration;
+use worker::Delay;
 
 cfg_if! {
     // https://github.com/rustwasm/console_error_panic_hook#readme
@@ -9,4 +11,9 @@ cfg_if! {
         #[inline]
         pub fn set_panic_hook() {}
     }
+}
+
+pub async fn delay(delay: u64) {
+    let delay: Delay = Duration::from_millis(delay).into();
+    delay.await;
 }
