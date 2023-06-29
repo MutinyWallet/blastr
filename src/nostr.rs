@@ -23,7 +23,6 @@ const RELAY_LIST_URL: &str = "https://api.nostr.watch/v1/online";
 const RELAYS: [&str; 8] = [
     "wss://nostr.zebedee.cloud",
     "wss://relay.snort.social",
-    "wss://eden.nostr.land",
     "wss://nos.lol",
     "wss://brb.io",
     "wss://nostr.fmt.wiz.biz",
