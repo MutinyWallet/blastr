@@ -14,6 +14,7 @@ use futures::StreamExt;
 use futures_util::lock::Mutex;
 use serde::{Deserialize, Serialize};
 use std::ops::DerefMut;
+use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use worker::*;
@@ -177,7 +178,7 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                 return Response::from_json(&get_nip11_response())?.with_cors(&cors());
             }
 
-            let ctx = Arc::new(ctx);
+            let ctx = Rc::new(ctx);
             // For websocket compatibility
             let pair = WebSocketPair::new()?;
             let server = pair.server;
