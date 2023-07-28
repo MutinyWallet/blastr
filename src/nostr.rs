@@ -29,6 +29,7 @@ const RELAYS: [&str; 8] = [
     "wss://nostr.fmt.wiz.biz",
     "wss://relay.damus.io",
     "wss://nostr.wine",
+    "wss://soloco.nl",
 ];
 
 pub fn get_nip11_response() -> RelayInformationDocument {
