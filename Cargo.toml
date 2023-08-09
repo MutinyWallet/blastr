@@ -11,8 +11,9 @@ default = ["console_error_panic_hook"]
 
 [dependencies]
 cfg-if = "0.1.2"
-worker = {  version = "0.0.13", features = ["queue"] }
+worker = { version = "0.0.13", features = ["queue"] }
 futures = "0.3.26"
+futures-util = { version = "0.3", default-features = false }
 nostr = { version = "0.22.0", default-features = false, features = ["nip11"] }
 serde = { version = "^1.0", features = ["derive"] }
 
