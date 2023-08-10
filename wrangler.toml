@@ -30,11 +30,11 @@ kv_namespaces = [
 ]
 
 [env.staging.vars]
-WORKERS_RS_VERSION = "0.0.13"
+WORKERS_RS_VERSION = "0.0.18"
 ENVIRONMENT = "staging"
 
 [vars]
-WORKERS_RS_VERSION = "0.0.13"
+WORKERS_RS_VERSION = "0.0.18"
 ENVIRONMENT = "production"
 
 # Replace with all the queues you created, if you named them different.
@@ -172,4 +172,4 @@ ENVIRONMENT = "production"
  binding = "nostr-events-pub-10-b"
 
 [build]
-command = "cargo install -q worker-build --version 0.0.9 && worker-build --release"
+command = "cargo install -q worker-build --version 0.0.10 && worker-build --release"
