@@ -66,6 +66,19 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                             ClientMessage::Event(event) => {
                                 console_log!("got an event from client: {}", event.id);
 
+                                match event.verify() {
+                                    Ok(()) => (),
+                                    Err(e) => {
+                                        console_log!("could not verify event {}: {}", event.id, e);
+                                        let relay_msg = RelayMessage::new_ok(
+                                            event.id,
+                                            false,
+                                            "invalid event",
+                                        );
+                                        return relay_response(relay_msg);
+                                    }
+                                }
+
                                 // check if disallowed event kind
                                 if DISALLOWED_EVENT_KINDS.contains(&event.kind.as_u32()) {
                                     console_log!(
@@ -204,6 +217,21 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                 match client_msg {
                                     ClientMessage::Event(event) => {
                                         console_log!("got an event from client: {}", event.id);
+                                        match event.verify() {
+                                            Ok(()) => (),
+                                            Err(e) => {
+                                                console_log!("could not verify event {}: {}", event.id, e);
+                                                let relay_msg = RelayMessage::new_ok(
+                                                    event.id,
+                                                    false,
+                                                    "disallowed event kind",
+                                                );
+                                                server
+                                                    .send_with_str(&relay_msg.as_json())
+                                                    .expect("failed to send response");
+                                                continue;
+                                            }
+                                        }
 
                                         // check if disallowed event kind
                                         if DISALLOWED_EVENT_KINDS.contains(&event.kind.as_u32()) {
