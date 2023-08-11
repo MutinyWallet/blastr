@@ -137,6 +137,13 @@ pub async fn get_nwc_events(keys: &[String], kind: Kind, db: &D1Database) -> Res
 }
 
 pub async fn handle_nwc_event(event: Event, db: &D1Database) -> Result<Option<RelayMessage>> {
+    // Determine the event kind
+    match event.kind {
+        Kind::WalletConnectResponse => (),
+        Kind::WalletConnectRequest => (),
+        _ => return Ok(None), // skip other event types
+    };
+
     // Create the main event insertion query.
     let event_insert_query = worker::query!(
         db,
