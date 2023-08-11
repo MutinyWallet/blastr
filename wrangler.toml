@@ -29,6 +29,16 @@ kv_namespaces = [
   { binding = "NWC_RESPONSES", id = "5b434d5eced84abaad1c9a44448ac71c", preview_id = "af27b55b58754562b4250dcd3682547b" },
 ]
 
+[[d1_databases]]
+binding = "DB"
+database_name = "blastr-db"
+database_id = "82736a30-841d-4c24-87d8-788763dacb01"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "blastr-db-staging"
+database_id = "ba4c227b-edf2-46a4-99fa-4b7bfa036800"
+
 [env.staging.vars]
 WORKERS_RS_VERSION = "0.0.18"
 ENVIRONMENT = "staging"

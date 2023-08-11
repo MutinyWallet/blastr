@@ -1,15 +1,13 @@
-use crate::nostr::get_nip11_response;
-use crate::nostr::NOSTR_QUEUE_10;
-use crate::nostr::NOSTR_QUEUE_7;
 use crate::nostr::NOSTR_QUEUE_8;
 use crate::nostr::NOSTR_QUEUE_9;
 pub(crate) use crate::nostr::{
     try_queue_event, NOSTR_QUEUE, NOSTR_QUEUE_2, NOSTR_QUEUE_3, NOSTR_QUEUE_4, NOSTR_QUEUE_5,
     NOSTR_QUEUE_6,
 };
-use ::nostr::{
-    ClientMessage, Event, EventId, Filter, Kind, RelayMessage, SubscriptionId, Tag, TagKind,
-};
+use crate::{db::delete_nwc_request, nostr::NOSTR_QUEUE_10};
+use crate::{db::get_nwc_events, nostr::NOSTR_QUEUE_7};
+use crate::{db::handle_nwc_event, nostr::get_nip11_response};
+use ::nostr::{ClientMessage, Event, EventId, Filter, Kind, RelayMessage, SubscriptionId};
 use futures::StreamExt;
 use futures_util::lock::Mutex;
 use serde::{Deserialize, Serialize};
@@ -19,6 +17,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use worker::*;
 
+mod db;
 mod error;
 mod nostr;
 mod utils;
@@ -113,12 +112,14 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                     return relay_response(relay_msg);
                                 };
 
+                                let db = ctx.d1("DB")?;
+
                                 // if the event is a nostr wallet connect event, we
                                 // should save it and not send to other relays.
                                 if let Some(relay_msg) =
-                                    handle_nwc_event(*event.clone(), &ctx).await?
+                                    handle_nwc_event(*event.clone(), &db).await?
                                 {
-                                    if let Err(e) = delete_nwc_request(*event, &ctx).await {
+                                    if let Err(e) = delete_nwc_request(*event, &db).await {
                                         console_log!("failed to delete nwc request: {e}");
                                     }
                                     return relay_response(relay_msg);
@@ -274,10 +275,12 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                             continue;
                                         };
 
+                                        let db = ctx.d1("DB").expect("should have DB");
+
                                         // if the event is a nostr wallet connect event, we
                                         // should save it and not send to other relays.
                                         if let Some(response) =
-                                            handle_nwc_event(*event.clone(), &ctx)
+                                            handle_nwc_event(*event.clone(), &db)
                                                 .await
                                                 .expect("failed to handle nwc event")
                                         {
@@ -285,7 +288,7 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                                 .send_with_str(&response.as_json())
                                                 .expect("failed to send response");
 
-                                            if let Err(e) = delete_nwc_request(*event, &ctx).await {
+                                            if let Err(e) = delete_nwc_request(*event, &db).await {
                                                 console_log!("failed to delete nwc request: {e}");
                                             }
 
@@ -382,7 +385,7 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                             // set running thread to true
                                             running_thread.swap(true, Ordering::Relaxed);
 
-                                            let ctx_clone = ctx.clone();
+                                            let db = ctx.d1("DB").expect("should have DB");
                                             let sub_id = subscription_id.clone();
                                             let server_clone = server.clone();
                                             let master_clone = requested_filters.clone();
@@ -397,7 +400,7 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                                         sub_id.clone(),
                                                         master.clone(),
                                                         &server_clone,
-                                                        &ctx_clone,
+                                                        &db,
                                                     ).await
                                                     {
                                                         Ok(new_event_ids) => {
@@ -500,7 +503,7 @@ pub async fn handle_filter(
     subscription_id: SubscriptionId,
     filter: Filter,
     server: &WebSocket,
-    ctx: &RouteContext<()>,
+    db: &D1Database,
 ) -> Result<Vec<EventId>> {
     let mut events = vec![];
     // get all authors and pubkeys
@@ -519,7 +522,7 @@ pub async fn handle_filter(
         .unwrap_or_default()
         .contains(&Kind::WalletConnectRequest)
     {
-        let mut found_events = get_nwc_events(&keys, Kind::WalletConnectRequest, ctx)
+        let mut found_events = get_nwc_events(&keys, Kind::WalletConnectRequest, db)
             .await
             .unwrap_or_default();
 
@@ -534,7 +537,7 @@ pub async fn handle_filter(
         .unwrap_or_default()
         .contains(&Kind::WalletConnectResponse)
     {
-        let mut found_events = get_nwc_events(&keys, Kind::WalletConnectResponse, ctx)
+        let mut found_events = get_nwc_events(&keys, Kind::WalletConnectResponse, db)
             .await
             .unwrap_or_default();
 
@@ -565,138 +568,6 @@ pub async fn handle_filter(
 
     let sent_event_ids: Vec<EventId> = events.into_iter().map(|e| e.id).collect();
     Ok(sent_event_ids)
-}
-
-pub async fn get_nwc_events(
-    keys: &[String],
-    kind: Kind,
-    ctx: &RouteContext<()>,
-) -> Result<Vec<Event>> {
-    let kv_store = match kind {
-        Kind::WalletConnectResponse => ctx.kv("NWC_RESPONSES")?,
-        Kind::WalletConnectRequest => ctx.kv("NWC_REQUESTS")?,
-        _ => return Ok(vec![]), // skip other event types, todo, we may want to store info events as well
-    };
-
-    let mut events = vec![];
-    for key in keys {
-        let nwc_events = kv_store
-            .get(key)
-            .json::<Vec<Event>>()
-            .await?
-            .unwrap_or_default();
-        for nwc_event in nwc_events {
-            // delete responses since we don't care after sending
-            if kind == Kind::WalletConnectResponse {
-                if let Err(e) = delete_nwc_response(&nwc_event, ctx).await {
-                    console_log!("failed to delete nwc response: {e}");
-                }
-            }
-            events.push(nwc_event);
-        }
-    }
-
-    Ok(events)
-}
-
-pub async fn handle_nwc_event(
-    event: Event,
-    ctx: &RouteContext<()>,
-) -> Result<Option<RelayMessage>> {
-    let kv_store = match event.kind {
-        Kind::WalletConnectResponse => ctx.kv("NWC_RESPONSES")?,
-        Kind::WalletConnectRequest => ctx.kv("NWC_REQUESTS")?,
-        _ => return Ok(None), // skip other event types, todo, we may want to store info events as well
-    };
-
-    console_log!("got a wallet connect event: {}", event.id);
-
-    let key = &event.pubkey.to_string();
-
-    let new_nwc_responses = match kv_store.get(key).json::<Vec<Event>>().await {
-        Ok(Some(mut current)) => {
-            current.push(event.clone());
-            current
-        }
-        Ok(None) => vec![event.clone()],
-        Err(e) => {
-            console_log!("error getting nwc events from KV: {e}");
-            let relay_msg =
-                RelayMessage::new_ok(event.id, false, "error: could not save published note");
-            return Ok(Some(relay_msg));
-        }
-    };
-
-    // save new vector of events
-    if let Err(e) = kv_store.put(key, new_nwc_responses)?.execute().await {
-        console_log!("error saving nwc: {e}");
-        let relay_msg =
-            RelayMessage::new_ok(event.id, false, "error: could not save published note");
-        return Ok(Some(relay_msg));
-    }
-    console_log!("saved nwc event: {}", event.id);
-
-    let relay_msg = RelayMessage::new_ok(event.id, true, "");
-    Ok(Some(relay_msg))
-}
-
-/// When a NWC request has been fulfilled, delete the request from KV
-pub async fn delete_nwc_request(event: Event, ctx: &RouteContext<()>) -> Result<()> {
-    let kv_store = match event.kind {
-        Kind::WalletConnectResponse => ctx.kv("NWC_REQUESTS")?,
-        _ => return Ok(()), // skip other event types
-    };
-
-    let p_tag = event.tags.iter().find(|t| t.kind() == TagKind::P).cloned();
-    let e_tag = event.tags.iter().find(|t| t.kind() == TagKind::E).cloned();
-
-    if let Some(Tag::PubKey(pubkey, ..)) = p_tag {
-        if let Some(Tag::Event(event_id, ..)) = e_tag {
-            let key = &pubkey.to_string();
-            match kv_store.get(key).json::<Vec<Event>>().await {
-                Ok(Some(current)) => {
-                    let new_events: Vec<Event> =
-                        current.into_iter().filter(|e| e.id != event_id).collect();
-
-                    // save new vector of events
-                    kv_store.put(key, new_events)?.execute().await?;
-                    console_log!("deleted nwc request event: {}", event_id);
-                }
-                Ok(None) => return Ok(()),
-                Err(e) => {
-                    console_log!("error getting nwc events from KV: {e}");
-                    return Ok(());
-                }
-            };
-        };
-    };
-
-    Ok(())
-}
-
-pub async fn delete_nwc_response(event: &Event, ctx: &RouteContext<()>) -> Result<()> {
-    let kv_store = match event.kind {
-        Kind::WalletConnectResponse => ctx.kv("NWC_RESPONSES")?,
-        _ => return Ok(()), // skip other event types
-    };
-
-    let key = &event.pubkey.to_string();
-    match kv_store.get(key).json::<Vec<Event>>().await {
-        Ok(Some(current)) => {
-            let new_events: Vec<Event> = current.into_iter().filter(|e| e.id != event.id).collect();
-
-            // save new vector of events
-            kv_store.put(key, new_events)?.execute().await?;
-            console_log!("deleted nwc response event: {}", event.id);
-        }
-        Ok(None) => return Ok(()),
-        Err(e) => {
-            console_log!("error getting nwc events from KV: {e}");
-            return Ok(());
-        }
-    };
-
-    Ok(())
 }
 
 // Helper function to extend a vector without duplicates
