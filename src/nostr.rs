@@ -159,10 +159,7 @@ pub async fn send_nostr_events(events: Vec<Event>, part: u32) -> Result<Vec<Even
         }
     } else {
         console_log!("no cache hit for relays");
-        match Fetch::Url("https://api.nostr.watch/v1/online".parse().unwrap())
-            .send()
-            .await
-        {
+        match Fetch::Url(RELAY_LIST_URL.parse().unwrap()).send().await {
             Ok(mut nostr_resp) => {
                 console_log!("retrieved online relay list");
                 match nostr_resp.json::<Vec<String>>().await {
