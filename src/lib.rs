@@ -7,7 +7,7 @@ pub(crate) use crate::nostr::{
 use crate::{db::delete_nwc_request, nostr::NOSTR_QUEUE_10};
 use crate::{db::get_nwc_events, nostr::NOSTR_QUEUE_7};
 use crate::{db::handle_nwc_event, nostr::get_nip11_response};
-use ::nostr::{ClientMessage, Event, EventId, Filter, Kind, RelayMessage, SubscriptionId};
+use ::nostr::{ClientMessage, Event, EventId, Filter, Kind, RelayMessage, SubscriptionId, Tag};
 use futures::StreamExt;
 use futures_util::lock::Mutex;
 use serde::{Deserialize, Serialize};
@@ -545,6 +545,16 @@ pub async fn handle_filter(
         found_events.retain(|e| !sent_events.contains(&e.id));
 
         events.extend(found_events);
+    }
+
+    // if the filter is only requesting replies to a certain event filter to only those
+    if let Some(event_ids) = filter.events {
+        events.retain(|event| {
+            event
+                .tags
+                .iter()
+                .any(|t| matches!(t, Tag::Event(id, _, _) if event_ids.contains(id)))
+        })
     }
 
     if events.is_empty() {
