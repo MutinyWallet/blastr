@@ -359,8 +359,8 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                                         || kinds.unwrap_or(&vec![])
                                                         .contains(&Kind::WalletConnectRequest)
                                                 ) &&
-                                                    // has authors and pubkeys
-                                                    !filter.authors.as_ref().unwrap_or(&vec![]).is_empty() &&
+                                                    // has authors or pubkeys
+                                                    !filter.authors.as_ref().unwrap_or(&vec![]).is_empty() ||
                                                     !filter.pubkeys.as_ref().unwrap_or(&vec![]).is_empty()
                                             };
 
