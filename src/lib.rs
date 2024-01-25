@@ -355,18 +355,29 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                                         let mut valid = false;
                                         for filter in filters {
                                             let valid_nwc = {
-                                                // has correct kinds
-                                                let kinds = filter.kinds.as_ref();
-                                                (
-                                                    kinds
-                                                        .unwrap_or(&vec![])
-                                                        .contains(&Kind::WalletConnectResponse)
-                                                        || kinds.unwrap_or(&vec![])
-                                                        .contains(&Kind::WalletConnectRequest)
-                                                ) &&
-                                                    // has authors or pubkeys
-                                                    !filter.authors.as_ref().unwrap_or(&vec![]).is_empty() ||
-                                                    !filter.pubkeys.as_ref().unwrap_or(&vec![]).is_empty()
+                                                let nwc_kinds = filter
+                                                    .kinds
+                                                    .as_ref()
+                                                    .map(|k| {
+                                                        k.contains(&Kind::WalletConnectResponse)
+                                                            || k.contains(
+                                                                &Kind::WalletConnectRequest,
+                                                            )
+                                                    })
+                                                    .unwrap_or(false);
+
+                                                let has_authors = filter
+                                                    .authors
+                                                    .as_ref()
+                                                    .map(|a| !a.is_empty())
+                                                    .unwrap_or(false);
+                                                let has_pks = filter
+                                                    .pubkeys
+                                                    .as_ref()
+                                                    .map(|a| !a.is_empty())
+                                                    .unwrap_or(false);
+
+                                                nwc_kinds && (has_authors || has_pks)
                                             };
 
                                             if valid_nwc {
